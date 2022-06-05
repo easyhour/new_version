@@ -20,6 +20,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool _loadingVersions = false;
+  String? _androidVersion;
+  String? _iosVersion;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +43,8 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       advancedStatusCheck(newVersion);
     }
+
+    printAllPlatforms();
   }
 
   basicStatusCheck(NewVersion newVersion) {
@@ -62,12 +68,41 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  printAllPlatforms() async {
+    setState(() => _loadingVersions = true);
+
+    final androidVersion = await NewVersion()
+        .getAndroidStoreVersion('com.google.android.apps.cloudconsole');
+    debugPrint("Android version: ${androidVersion?.version}");
+    final iosVersion =
+        await NewVersion().getIosStoreVersion('com.google.Vespa');
+    debugPrint("iOS version: ${iosVersion?.version}");
+
+    setState(() {
+      _loadingVersions = false;
+      _androidVersion = androidVersion?.version;
+      _iosVersion = iosVersion?.version;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Example App"),
-      ),
-    );
+        appBar: AppBar(
+          title: Text("Example App"),
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: _loadingVersions
+                ? CircularProgressIndicator()
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        Text("Android version: $_androidVersion"),
+                        Text("iOS version: $_iosVersion"),
+                      ]),
+          ),
+        ));
   }
 }
