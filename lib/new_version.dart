@@ -180,50 +180,17 @@ class NewVersion {
       debugPrint('Can\'t find an app in the Play Store with the id: $id');
       return null;
     }
-    final document = parse(response.body);
+    final documentContent = response.body;
 
-    String storeVersion = '0.0.0';
-    String? releaseNotes;
+    String storeVersion = RegExp(r'\[\[\["(\d+\..*?)"\]\]')
+            .firstMatch(documentContent)
+            ?.group(1) ??
+        '0.0.0';
 
-    final additionalInfoElements = document.getElementsByClassName('hAyfc');
-    if (additionalInfoElements.isNotEmpty) {
-      final versionElement = additionalInfoElements.firstWhere(
-        (elm) => elm.querySelector('.BgcNfc')!.text == 'Current Version',
-      );
-      storeVersion = versionElement.querySelector('.htlgb')!.text;
-
-      final sectionElements = document.getElementsByClassName('W4P4ne');
-      final releaseNotesElement = sectionElements.firstWhereOrNull(
-        (elm) => elm.querySelector('.wSaTQd')!.text == 'What\'s New',
-      );
-      releaseNotes = releaseNotesElement
-          ?.querySelector('.PHBdkd')
-          ?.querySelector('.DWPxHb')
-          ?.text;
-    } else {
-      final scriptElements = document.getElementsByTagName('script');
-      final infoScriptElement = scriptElements.firstWhere(
-        (elm) => elm.text.contains('key: \'ds:4\''),
-      );
-
-      final param = infoScriptElement.text
-          .substring(20, infoScriptElement.text.length - 2)
-          .replaceAll('key:', '"key":')
-          .replaceAll('hash:', '"hash":')
-          .replaceAll('data:', '"data":')
-          .replaceAll('sideChannel:', '"sideChannel":')
-          .replaceAll('\'', '"');
-      final parsed = json.decode(param);
-      final data = parsed['data'];
-
-      try {
-        storeVersion = data[1][2][140][0][0][0];
-      } catch (e, s) {
-        debugPrint(e.toString());
-        if (kDebugMode) print(s);
-      }
-      releaseNotes = data[1][2][144][1][1];
-    }
+    String? releaseNotes = parse(documentContent)
+        .getElementsByTagName('div')
+        .firstWhereOrNull((el) => el.attributes['itemprop'] == 'description')
+        ?.innerHtml;
 
     return NewVersionFields(
       version: storeVersion,
