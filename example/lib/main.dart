@@ -21,8 +21,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool _loadingVersions = false;
-  String? _androidVersion;
-  String? _iosVersion;
+  NewVersionFields? _androidVersion;
+  NewVersionFields? _iosVersion;
 
   @override
   void initState() {
@@ -80,8 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       _loadingVersions = false;
-      _androidVersion = androidVersion?.version;
-      _iosVersion = iosVersion?.version;
+      _androidVersion = androidVersion;
+      _iosVersion = iosVersion;
     });
   }
 
@@ -99,8 +99,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                        Text("Android version: $_androidVersion"),
-                        Text("iOS version: $_iosVersion"),
+                        Text(
+                          "Android version: ${_androidVersion?.version}",
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          _androidVersion?.releaseNotes ?? "",
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "iOS version: ${_iosVersion?.version}",
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          _iosVersion?.releaseNotes ?? "",
+                          textAlign: TextAlign.center,
+                        ),
                       ]),
           ),
         ));
