@@ -4,10 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
-import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -172,28 +170,18 @@ class NewVersion {
   }
 
   Future<NewVersionFields?> getAndroidStoreVersion(String id) async {
-    final uri = Uri.https(
-        "play.google.com", "/store/apps/details", {"id": "$id", "hl": "en_US"});
+    final uri = Uri.https("play.google.com", "/store/apps/details",
+        {"id": id.toString(), "hl": "en_US"});
     final response = await http.get(uri);
     if (response.statusCode != 200) {
-      debugPrint('Can\'t find an app in the Play Store with the id: $id');
-      return null;
+      throw Exception("Invalid response code: ${response.statusCode}");
     }
-    final documentContent = response.body;
-
-    String storeVersion = RegExp(r'\[\[\["(\d+\..*?)"\]\]')
-            .firstMatch(documentContent)
-            ?.group(1) ??
-        '0.0.0';
-
-    String? releaseNotes = parse(documentContent)
-        .getElementsByTagName('div')
-        .firstWhereOrNull((el) => el.attributes['itemprop'] == 'description')
-        ?.innerHtml;
+    final regexp = RegExp(r'\[\[\["(\d+\.\d+\.\d+)"\]\]');
+    final storeVersion = regexp.firstMatch(response.body)!.group(1);
 
     return NewVersionFields(
       version: storeVersion,
-      releaseNotes: releaseNotes,
+      releaseNotes: null,
       appStoreLink: uri,
     );
   }
